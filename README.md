@@ -24,3 +24,5 @@ Welcome to my personal link-in-bio and project showcase page! This is a clean, m
 ├── channels4_profile.jpg # Profile picture used for the avatar
 ├── favicon.png           # Favicon of the Page
 └── README.md             # Project documentation (this file)
+
+© 2026 SynergyStation Development. Built with ❤️ and driven by OpenSource.
