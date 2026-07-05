@@ -397,7 +397,6 @@
                 <h3>Music</h3>
                 <div class="track-info">
                     <i id="music-icon" class="fas fa-music"></i>
-                    <!-- HTML Standard-Text korrigiert -->
                     <span id="track-title" class="track-title">BLN - Ak Ausserkontrolle</span>
                 </div>
                 
@@ -415,7 +414,7 @@
 
                 <div class="volume-container">
                     <i id="volume-icon" class="fas fa-volume-mute volume-icon"></i>
-                    <input type="range" id="volume-slider" class="volume-slider" min="0" max="1" step="0.01" value="0">
+                    <input type="range" id="volume-slider" class="volume-slider" min="0" max="1" step="0.01" value="0.5">
                 </div>
             </section>
 
@@ -448,9 +447,8 @@
         </footer>
     </div>
 
-    <!-- Muted Autoplay Script mit sauberen Namen -->
+    <!-- Bereinigtes Musik-Script ohne Autoplay-Error -->
     <script>
-        // "Tuff" und "Tuff 3" komplett aus den Bezeichnungen gelöscht
         const songs = [
             { title: 'BLN - Ak Ausserkontrolle', src: 'music/mexo/tuff.mp3' },
             { title: 'goosebumps - Travis Scott', src: 'music/mexo/tuff2.mp3' },
@@ -460,10 +458,10 @@
         let currentSongIndex = 0;
         let isPlaying = false;
 
-        const audio = new Audio(songs[currentSongIndex].src);
-        
-        audio.muted = true; 
-        audio.volume = 0;
+        // Audio-Objekt global erzeugen, startet ohne Autoplay-Sperre
+        const audio = new Audio();
+        audio.muted = false; 
+        audio.volume = 0.5;
 
         const playBtn = document.getElementById('play-btn');
         const playIcon = document.getElementById('play-icon');
@@ -473,6 +471,10 @@
         const musicIcon = document.getElementById('music-icon');
         const volumeSlider = document.getElementById('volume-slider');
         const volIcon = document.getElementById('volume-icon');
+
+        // Initiale Slider-Werte setzen
+        volumeSlider.value = 0.5;
+        volIcon.className = 'fas fa-volume-high volume-icon';
 
         function loadSong(song) {
             trackTitle.textContent = song.title;
@@ -484,7 +486,10 @@
                 playIcon.className = 'fas fa-pause';
                 musicIcon.classList.add('playing');
                 isPlaying = true;
-            }).catch(err => console.log("Autoplay blockiert:", err));
+            }).catch(err => {
+                console.log("Abspielen blockiert oder Datei nicht gefunden:", err);
+                isPlaying = false;
+            });
         }
 
         function pauseSong() {
@@ -498,8 +503,7 @@
             if (isPlaying) {
                 pauseSong();
             } else {
-                if(audio.muted) {
-                    audio.muted = false;
+                if (audio.volume === 0) {
                     audio.volume = 0.5;
                     volumeSlider.value = 0.5;
                     volIcon.className = 'fas fa-volume-high volume-icon';
@@ -516,8 +520,12 @@
             }
             
             loadSong(songs[currentSongIndex]);
+            
             if (isPlaying) {
                 playSong();
+            } else {
+                playIcon.className = 'fas fa-play';
+                musicIcon.classList.remove('playing');
             }
         }
 
@@ -527,15 +535,19 @@
         audio.addEventListener('ended', () => changeSong(true));
 
         volIcon.addEventListener('click', () => {
-            audio.muted = false;
-            audio.volume = 0.5;
-            volumeSlider.value = 0.5;
-            volIcon.className = 'fas fa-volume-high volume-icon';
+            if (audio.volume > 0) {
+                audio.volume = 0;
+                volumeSlider.value = 0;
+                volIcon.className = 'fas fa-volume-mute volume-icon';
+            } else {
+                audio.volume = 0.5;
+                volumeSlider.value = 0.5;
+                volIcon.className = 'fas fa-volume-high volume-icon';
+            }
         });
 
         volumeSlider.addEventListener('input', (e) => {
             const val = e.target.value;
-            audio.muted = (val == 0);
             audio.volume = val;
             
             if (val == 0) {
@@ -547,8 +559,8 @@
             }
         });
 
+        // Bereitet den Song vor, startet aber erst auf Klick
         loadSong(songs[currentSongIndex]);
-        playSong();
     </script>
 
 </body>
