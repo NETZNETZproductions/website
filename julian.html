@@ -224,6 +224,14 @@
             font-weight: 500;
             letter-spacing: 0.2px;
         }
+
+        /* Kleine unauffällige Statusanzeige für Musikfehler im Footer der Card */
+        #audio-status-log {
+            font-size: 0.75rem;
+            color: #d1447a;
+            margin-top: 10px;
+            opacity: 0.7;
+        }
     </style>
 </head>
 <body>
@@ -244,8 +252,9 @@
     <span class="sakura" style="left:90%; animation-duration:13s; animation-delay:2.5s;">🌸</span>
     <span class="sakura" style="left:96%; font-size:1.1rem; animation-duration:9s; animation-delay:4s;">🌸</span>
 
-    <audio id="bg-audio" loop>
-        <source src="music/song_Julian442.mp3" type="audio/mpeg">
+    <!-- preload="auto" zwingt den Browser dazu, die Datei direkt aggressiv zu laden -->
+    <audio id="bg-audio" loop preload="auto">
+        <source src="/music/song_Julian442.mp3" type="audio/mpeg">
     </audio>
 
     <div class="music-controls">
@@ -273,6 +282,8 @@
             </button>
             <span class="like-count" id="like-count">– likes</span>
         </div>
+
+        <div id="audio-status-log">Musik wird vorbereitet...</div>
     </div>
 
     <a href="https://synergystation.github.io/" class="corner-link" target="_blank" rel="noopener noreferrer">
@@ -287,6 +298,7 @@
         const volBtn = document.getElementById('volume-btn');
         const volIcon = document.getElementById('vol-icon');
         const volSlider = document.getElementById('volume-slider');
+        const statusLog = document.getElementById('audio-status-log');
 
         audio.volume = 0.3;
 
@@ -296,26 +308,43 @@
         }
         updateSliderTrack();
 
-        // Verhindert Überschneidungen beim Klicken des Play-Buttons
+        // Überwacht Fehler beim direkten Laden der Musikdatei
+        audio.addEventListener('error', (e) => {
+            statusLog.textContent = "Fehler: Musikdatei nicht gefunden oder defekt!";
+            console.error("Audio Error Event:", e);
+        });
+
+        audio.addEventListener('canplaythrough', () => {
+            statusLog.textContent = "Musik bereit zum Abspielen ✨";
+        });
+
         let isPlayPromisePending = false;
 
-        playBtn.onclick = () => {
+        function playAudioSecurely() {
             if (isPlayPromisePending) return;
+            isPlayPromisePending = true;
+            
+            statusLog.textContent = "Starte Musik...";
+            audio.play()
+                .then(() => {
+                    isPlayPromisePending = false;
+                    playIcon.className = "fas fa-pause";
+                    statusLog.textContent = "Musik läuft 🎵";
+                })
+                .catch(err => {
+                    isPlayPromisePending = false;
+                    statusLog.textContent = "Browser blockiert Autoplay. Bitte klicke auf Play!";
+                    console.warn("Play blockiert:", err);
+                });
+        }
 
+        playBtn.onclick = () => {
             if (audio.paused) {
-                isPlayPromisePending = true;
-                audio.play()
-                    .then(() => {
-                        isPlayPromisePending = false;
-                        playIcon.className = "fas fa-pause";
-                    })
-                    .catch(err => {
-                        isPlayPromisePending = false;
-                        console.error("Audio-Wiedergabe fehlgeschlagen:", err);
-                    });
+                playAudioSecurely();
             } else {
                 audio.pause();
                 playIcon.className = "fas fa-play";
+                statusLog.textContent = "Musik pausiert";
             }
         };
 
@@ -331,43 +360,28 @@
             updateSliderTrack();
         };
 
-        // --- Musik sicher und ohne Konflikte per Interaktion starten ---
-        function tryAutoplay() {
-            audio.play()
-                .then(() => {
-                    playIcon.className = "fas fa-pause";
-                })
-                .catch(() => {
-                    const events = ['click', 'keydown', 'touchstart', 'pointerdown'];
-                    
-                    const startOnInteraction = () => {
-                        if (isPlayPromisePending || !audio.paused) return;
-                        
-                        isPlayPromisePending = true;
-                        audio.play()
-                            .then(() => {
-                                isPlayPromisePending = false;
-                                playIcon.className = "fas fa-pause";
-                                cleanUpListeners();
-                            })
-                            .catch(() => {
-                                isPlayPromisePending = false;
-                            });
-                    };
+        // --- Robuste Aktivierung bei Interaktion ---
+        function initAutoplay() {
+            // Erster direkter Versuch
+            playAudioSecurely();
 
-                    const cleanUpListeners = () => {
-                        events.forEach(ev => document.removeEventListener(ev, startOnInteraction));
-                    };
+            // Fallback auf jegliche Nutzerinteraktionen im Dokument
+            const interactionEvents = ['click', 'touchstart', 'keydown', 'pointerdown'];
+            
+            const triggerOnUser = () => {
+                if (audio.paused) {
+                    playAudioSecurely();
+                }
+                interactionEvents.forEach(event => document.removeEventListener(event, triggerOnUser));
+            };
 
-                    events.forEach(ev => document.addEventListener(ev, startOnInteraction, { once: true, passive: true }));
-                });
+            interactionEvents.forEach(event => document.addEventListener(event, triggerOnUser, { once: true, passive: true }));
         }
-        
-        // Startet den Autoplay-Versuch erst, wenn das Dokument vollständig bereit ist
+
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', tryAutoplay);
+            document.addEventListener('DOMContentLoaded', initAutoplay);
         } else {
-            tryAutoplay();
+            initAutoplay();
         }
 
         // --- Like-Funktion ---
