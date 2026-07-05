@@ -14,8 +14,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            /* Hintergrundbild aus dem Ordner */
-            background: url('background/bg_Julian442.png') no-repeat center center fixed;
+            background: url('bg_Julian442.png') no-repeat center center fixed;
             background-size: cover;
             color: #ffffff;
         }
@@ -77,7 +76,8 @@
 </head>
 <body>
 
-    <audio id="bg-audio" src="music.mp3" loop></audio>
+    <!-- Musik-Datei eingebunden -->
+    <audio id="bg-audio" src="song_Julian442.mp3" loop></audio>
 
     <div class="music-controls">
         <button class="control-btn" id="play-pause-btn"><i class="fas fa-play"></i></button>
@@ -103,11 +103,24 @@
 
     <script>
         const audio = document.getElementById('bg-audio');
-        document.getElementById('play-pause-btn').onclick = () => {
-            audio.paused ? audio.play() : audio.pause();
+        const playBtn = document.getElementById('play-pause-btn');
+        const volBtn = document.getElementById('volume-btn');
+
+        // Play / Pause Funktion mit Icon-Wechsel
+        playBtn.onclick = () => {
+            if (audio.paused) {
+                audio.play();
+                playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            } else {
+                audio.pause();
+                playBtn.innerHTML = '<i class="fas fa-play"></i>';
+            }
         };
-        document.getElementById('volume-btn').onclick = () => {
+
+        // Lautstärke / Mute Funktion mit Icon-Wechsel
+        volBtn.onclick = () => {
             audio.muted = !audio.muted;
+            volBtn.innerHTML = audio.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
         };
     </script>
 </body>
