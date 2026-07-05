@@ -29,7 +29,7 @@ Welcome to the central Link-in-Bio and Project Showcase Hub of **SynergyStation*
 ├── julian.hintergrund.png      # Optional custom background image for Julian442
 ├── mexo.html                   # Profile page for Mexo
 ├── template.html               # Base template for creating new member profile pages
-├── updates                     # Containing the Profile Pictures for the Profiles
+├── updates/                    # Containing the Profile Pictures for the Profiles
 ├   └─ benkormos.profilbild.jpg
 ├   └─ julian.profilbild.png
 ├   └─ mexo.profilbild.png
